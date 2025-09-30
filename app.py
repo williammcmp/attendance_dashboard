@@ -67,7 +67,8 @@ def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st
     else:
         text = "off Campus 🏝️"
 
-    return st.metric(text, len(today_dict[mode]), len(yesterday_dict[mode]))
+    return st.metric(text, len(today_dict[mode]))
+    # return st.metric(text, len(today_dict[mode]), len(yesterday_dict[mode]))
 
 
 
