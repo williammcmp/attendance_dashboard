@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pytz
 import streamlit as st
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
@@ -15,11 +16,15 @@ def get_sheet_data() -> pd.DataFrame:
     return df
 
 # Will get n-1 days from today in the past
-def get_data_for_days_ago(data: pd.DataFrame | None = None, days: int = 1) -> pd.DataFrame:
+def get_data_for_days_ago(data: pd.DataFrame | None = None, days: int = 1, tz="Australia/Melbourne") -> pd.DataFrame:
     if data is None:
         data = get_sheet_data()
 
-    target_date = datetime.now().date() - timedelta(days=days)
+    # Get Australian timezone
+    au_tz = pytz.timezone(tz)
+
+    # Current date in that zone
+    target_date = datetime.now(au_tz).date() - timedelta(days=days)
 
     return data[data["Timestamp"].dt.date == target_date]
 
