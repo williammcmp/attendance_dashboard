@@ -41,13 +41,18 @@ def get_attendance_list(data : pd.DataFrame | None = None) -> dict:
     # Drop rows with missing names or status
     filtered = todays_data.dropna(subset=['Person of Intrest', 'Where is the Person of Intrest?'])
 
-    # Normalize names (strip whitespace)
     filtered['Person of Intrest'] = filtered['Person of Intrest'].astype(str).str.strip()
     filtered['Where is the Person of Intrest?'] = filtered['Where is the Person of Intrest?'].astype(str).str.strip()
 
     on_campus = filtered.loc[filtered['Where is the Person of Intrest?'] == 'In the Office', 'Person of Intrest'].dropna().unique()
-    off_campus = filtered.loc[filtered['Where is the Person of Intrest?'] != 'In the Office', 'Person of Intrest'].dropna().unique()
+    
+    all_names = get_all_users_names()
+    off_campus = []
+    for name in all_names:
+        if name not in on_campus:
+            off_campus.append(name)
 
+    # print(on_campus, off_campus)
     return {'on_campus': on_campus, 'off_campus': off_campus}
 
 def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st.metric:
@@ -57,7 +62,12 @@ def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st
     today_dict = get_attendance_list(get_data_for_days_ago(days=0))
     yesterday_dict = get_attendance_list(get_data_for_days_ago(days=1))
 
-    return st.metric('On Campus 🏫', len(today_dict[mode]), len(yesterday_dict[mode]))
+    if mode == 'on_campus':
+        text = "On Campus 🏫"
+    else:
+        text = "off Campus 🏝️"
+
+    return st.metric(text, len(today_dict[mode]), len(yesterday_dict[mode]))
 
 
 
@@ -69,6 +79,7 @@ st.title("🏢 Who’s In the Office Today?")
 
 # Fetch data from Google Sheet
 data = get_sheet_data()
+
 attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0))
 
 
