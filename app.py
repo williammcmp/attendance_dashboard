@@ -6,7 +6,7 @@ from streamlit_gsheets import GSheetsConnection
 
 # gets the entire google sheets
 def get_sheet_data() -> pd.DataFrame:
-    conn = st.connection("gsheets", type=GSheetsConnection, ttl=600)
+    conn = st.connection("gsheets", type=GSheetsConnection, ttl=30) # Update time set to refresh the connection every 30 s
     df = conn.read()
 
     df = pd.DataFrame(df)
