@@ -83,8 +83,13 @@ st.set_page_config(page_title="Office Presence Today", layout="wide")
 
 st.title("🏢 Who’s In the Office Today?")
 
+if st.button("🔄 Refresh data now"):
+    st.cache_data.clear()   # clear cached data
+    st.rerun()
+
 # Fetch data from Google Sheet
 data = get_sheet_data()
+
 
 attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0))
 
