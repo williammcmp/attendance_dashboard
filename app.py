@@ -30,22 +30,16 @@ def get_data_for_days_ago(data: pd.DataFrame | None = None, days: int = 1, tz="A
     return data[data["Timestamp"].dt.date == target_date]
 
     
-def get_all_users_names(data : pd.DataFrame | None = None) -> pd.DataFrame:
-    if data is None:
-        data = get_sheet_data()
+def get_all_users_names(data : pd.DataFrame) -> pd.DataFrame:
 
     name_list = data['Person of Intrest'].unique()
     return name_list
     
-def get_attendance_list(data : pd.DataFrame | None = None) -> dict:
+def get_attendance_list(data : pd.DataFrame) -> dict:
     # TODO make this logic a bit more robust
-    if data is None:
-        data = get_sheet_data()
-
-    todays_data = get_data_for_days_ago(data, 0)
 
     # Drop rows with missing names or status
-    filtered = todays_data.dropna(subset=['Person of Intrest', 'Where is the Person of Intrest?'])
+    filtered = data.dropna(subset=['Person of Intrest', 'Where is the Person of Intrest?'])
 
     filtered['Person of Intrest'] = filtered['Person of Intrest'].astype(str).str.strip()
     filtered['Where is the Person of Intrest?'] = filtered['Where is the Person of Intrest?'].astype(str).str.strip()
@@ -58,10 +52,6 @@ def get_attendance_list(data : pd.DataFrame | None = None) -> dict:
         if name not in on_campus:
             off_campus.append(name)
 
-    # Sort the names to be alphabetical
-    
-
-    # print(on_campus, off_campus)
     return {'on_campus': np.sort(on_campus), 'off_campus': np.sort(off_campus)}
 
 def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st.metric:
