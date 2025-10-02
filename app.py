@@ -17,9 +17,7 @@ def get_sheet_data() -> pd.DataFrame:
     return df
 
 # Will get n-1 days from today in the past
-def get_data_for_days_ago(data: pd.DataFrame | None = None, days: int = 1, tz="Australia/Melbourne") -> pd.DataFrame:
-    if data is None:
-        data = get_sheet_data()
+def get_data_for_days_ago(data: pd.DataFrame, days: int = 1, tz="Australia/Melbourne") -> pd.DataFrame:
 
     # Get Australian timezone
     au_tz = pytz.timezone(tz)
@@ -54,12 +52,26 @@ def get_attendance_list(data : pd.DataFrame) -> dict:
 
     return {'on_campus': np.sort(on_campus), 'off_campus': np.sort(off_campus)}
 
-def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st.metric:
-    if data is None:
-        data = get_sheet_data()
+def get_last_5_days(data: pd.DataFrame):
 
-    today_dict = get_attendance_list(get_data_for_days_ago(days=0))
-    yesterday_dict = get_attendance_list(get_data_for_days_ago(days=1))
+    temp_on_campus = []
+    temp_off_campus = []
+
+    for i in range(5):
+        
+        temp_dict = get_attendance_list(get_data_for_days_ago(data=data, days=i))
+        temp_on_campus.append(len(temp_dict['on_campus']))
+        temp_off_campus.append(len(temp_dict['off_campus']))
+
+    temp_on_campus.reverse()
+    temp_off_campus.reverse()
+
+    print(temp_on_campus, temp_off_campus)
+
+def get_metric(data: pd.DataFrame, mode : str = 'on_campus') -> st.metric:
+
+    today_dict = get_attendance_list(get_data_for_days_ago(data, days=0))
+    yesterday_dict = get_attendance_list(get_data_for_days_ago(data, days=1))
 
     if mode == 'on_campus':
         text = "On Campus 🏫"
@@ -67,7 +79,7 @@ def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st
         text = "Off Campus 🏝️"
 
     # return st.metric(text, len(today_dict[mode]))
-    return st.metric(text, len(today_dict[mode]), len(yesterday_dict[mode])-len(today_dict[mode]))
+    return st.metric(text, len(today_dict[mode]), len(today_dict[mode])-len(yesterday_dict[mode]))
 
 
 st.set_page_config(page_title="Office Presence Today", layout="wide")
@@ -95,8 +107,8 @@ with col2:
     get_metric('off_campus', data)
     st.dataframe(attendance_dict['off_campus'])
 
-
-
+if st.button('test'):
+    get_last_5_days()
 
 with st.expander("J-Dog and Friends Google Form"):
     st.text("Applogies for the sudden bright mode for the good sheet. Please forgive 🙏")
