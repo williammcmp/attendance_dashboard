@@ -44,7 +44,7 @@ def get_attendance_list(data : pd.DataFrame) -> dict:
 
     on_campus = filtered.loc[filtered['Where is the Person of Intrest?'] == 'In the Office', 'Person of Intrest'].dropna().unique()
     
-    all_names = get_all_users_names()
+    all_names = get_all_users_names(data)
     off_campus = []
     for name in all_names:
         if name not in on_campus:
