@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 import streamlit as st
+import numpy as np
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 
@@ -16,9 +17,7 @@ def get_sheet_data() -> pd.DataFrame:
     return df
 
 # Will get n-1 days from today in the past
-def get_data_for_days_ago(data: pd.DataFrame | None = None, days: int = 1, tz="Australia/Melbourne") -> pd.DataFrame:
-    if data is None:
-        data = get_sheet_data()
+def get_data_for_days_ago(data: pd.DataFrame, days: int = 1, tz="Australia/Melbourne") -> pd.DataFrame:
 
     # Get Australian timezone
     au_tz = pytz.timezone(tz)
@@ -29,54 +28,57 @@ def get_data_for_days_ago(data: pd.DataFrame | None = None, days: int = 1, tz="A
     return data[data["Timestamp"].dt.date == target_date]
 
     
-def get_all_users_names(data : pd.DataFrame | None = None) -> pd.DataFrame:
-    if data is None:
-        data = get_sheet_data()
+def get_all_users_names(data : pd.DataFrame) -> pd.DataFrame:
 
     name_list = data['Person of Intrest'].unique()
     return name_list
     
-def get_attendance_list(data : pd.DataFrame | None = None) -> dict:
+def get_attendance_list(data : pd.DataFrame, all_names : list) -> dict:
     # TODO make this logic a bit more robust
-    if data is None:
-        data = get_sheet_data()
-
-    todays_data = get_data_for_days_ago(data, 0)
 
     # Drop rows with missing names or status
-    filtered = todays_data.dropna(subset=['Person of Intrest', 'Where is the Person of Intrest?'])
+    filtered = data.dropna(subset=['Person of Intrest', 'Where is the Person of Intrest?'])
 
     filtered['Person of Intrest'] = filtered['Person of Intrest'].astype(str).str.strip()
     filtered['Where is the Person of Intrest?'] = filtered['Where is the Person of Intrest?'].astype(str).str.strip()
 
     on_campus = filtered.loc[filtered['Where is the Person of Intrest?'] == 'In the Office', 'Person of Intrest'].dropna().unique()
-    
-    all_names = get_all_users_names()
+
     off_campus = []
     for name in all_names:
         if name not in on_campus:
             off_campus.append(name)
 
-    # print(on_campus, off_campus)
-    return {'on_campus': on_campus, 'off_campus': off_campus}
+    return {'on_campus': np.sort(on_campus), 'off_campus': np.sort(off_campus)}
 
-def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st.metric:
-    if data is None:
-        data = get_sheet_data()
+def get_last_5_days(data: pd.DataFrame):
 
-    today_dict = get_attendance_list(get_data_for_days_ago(days=0))
-    yesterday_dict = get_attendance_list(get_data_for_days_ago(days=1))
+    temp_on_campus = []
+    temp_off_campus = []
+
+    for i in range(5):
+        
+        temp_dict = get_attendance_list(get_data_for_days_ago(data=data, days=i), get_all_users_names(data))
+        temp_on_campus.append(len(temp_dict['on_campus']))
+        temp_off_campus.append(len(temp_dict['off_campus']))
+
+    # temp_on_campus.reverse()
+    # temp_off_campus.reverse()
+
+    return temp_on_campus, temp_off_campus
+
+def get_metric(data: pd.DataFrame, mode : str = 'on_campus') -> st.metric:
+
+    today_dict = get_attendance_list(get_data_for_days_ago(data, days=0), get_all_users_names(data))
+    yesterday_dict = get_attendance_list(get_data_for_days_ago(data, days=1), get_all_users_names(data))
 
     if mode == 'on_campus':
         text = "On Campus 🏫"
     else:
-        text = "off Campus 🏝️"
+        text = "Off Campus 🏝️"
 
-    return st.metric(text, len(today_dict[mode]))
-    # return st.metric(text, len(today_dict[mode]), len(yesterday_dict[mode]))
-
-
-
+    # return st.metric(text, len(today_dict[mode]))
+    return st.metric(text, len(today_dict[mode]), len(today_dict[mode])-len(yesterday_dict[mode]))
 
 
 st.set_page_config(page_title="Office Presence Today", layout="wide")
@@ -91,20 +93,21 @@ if st.button("🔄 Refresh data now"):
 data = get_sheet_data()
 
 
-attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0))
+attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0), get_all_users_names(data))
 
+# on_campus, off_campus = get_last_5_days(data)
+
+# st.area_chart(pd.DataFrame({'On Campus': on_campus, "Off Campus": off_campus}))
 
 col1, col2 = st.columns(2)
 
 with col1:
-    get_metric('on_campus', data)
+    get_metric(data, 'on_campus',)
     st.dataframe(attendance_dict['on_campus'])
 
 with col2:
-    get_metric('off_campus', data)
+    get_metric(data, 'off_campus')
     st.dataframe(attendance_dict['off_campus'])
-
-
 
 
 with st.expander("J-Dog and Friends Google Form"):
