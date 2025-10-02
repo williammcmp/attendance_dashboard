@@ -95,9 +95,9 @@ data = get_sheet_data()
 
 attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0), get_all_users_names(data))
 
-on_campus, off_campus = get_last_5_days(data)
+# on_campus, off_campus = get_last_5_days(data)
 
-st.area_chart(pd.DataFrame({'On Campus': on_campus, "Off Campus": off_campus}))
+# st.area_chart(pd.DataFrame({'On Campus': on_campus, "Off Campus": off_campus}))
 
 col1, col2 = st.columns(2)
 
