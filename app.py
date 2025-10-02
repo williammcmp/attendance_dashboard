@@ -33,7 +33,7 @@ def get_all_users_names(data : pd.DataFrame) -> pd.DataFrame:
     name_list = data['Person of Intrest'].unique()
     return name_list
     
-def get_attendance_list(data : pd.DataFrame) -> dict:
+def get_attendance_list(data : pd.DataFrame, all_names : list) -> dict:
     # TODO make this logic a bit more robust
 
     # Drop rows with missing names or status
@@ -43,8 +43,7 @@ def get_attendance_list(data : pd.DataFrame) -> dict:
     filtered['Where is the Person of Intrest?'] = filtered['Where is the Person of Intrest?'].astype(str).str.strip()
 
     on_campus = filtered.loc[filtered['Where is the Person of Intrest?'] == 'In the Office', 'Person of Intrest'].dropna().unique()
-    
-    all_names = get_all_users_names(data)
+
     off_campus = []
     for name in all_names:
         if name not in on_campus:
@@ -59,7 +58,7 @@ def get_last_5_days(data: pd.DataFrame):
 
     for i in range(5):
         
-        temp_dict = get_attendance_list(get_data_for_days_ago(data=data, days=i))
+        temp_dict = get_attendance_list(get_data_for_days_ago(data=data, days=i), get_all_users_names(data))
         temp_on_campus.append(len(temp_dict['on_campus']))
         temp_off_campus.append(len(temp_dict['off_campus']))
 
@@ -70,8 +69,8 @@ def get_last_5_days(data: pd.DataFrame):
 
 def get_metric(data: pd.DataFrame, mode : str = 'on_campus') -> st.metric:
 
-    today_dict = get_attendance_list(get_data_for_days_ago(data, days=0))
-    yesterday_dict = get_attendance_list(get_data_for_days_ago(data, days=1))
+    today_dict = get_attendance_list(get_data_for_days_ago(data, days=0), get_all_users_names(data))
+    yesterday_dict = get_attendance_list(get_data_for_days_ago(data, days=1), get_all_users_names(data))
 
     if mode == 'on_campus':
         text = "On Campus 🏫"
@@ -94,7 +93,7 @@ if st.button("🔄 Refresh data now"):
 data = get_sheet_data()
 
 
-attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0))
+attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0), get_all_users_names(data))
 
 
 col1, col2 = st.columns(2)
@@ -108,7 +107,7 @@ with col2:
     st.dataframe(attendance_dict['off_campus'])
 
 if st.button('test'):
-    get_last_5_days()
+    get_last_5_days(data)
 
 with st.expander("J-Dog and Friends Google Form"):
     st.text("Applogies for the sudden bright mode for the good sheet. Please forgive 🙏")
