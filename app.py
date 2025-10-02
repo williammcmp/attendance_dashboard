@@ -62,10 +62,10 @@ def get_last_5_days(data: pd.DataFrame):
         temp_on_campus.append(len(temp_dict['on_campus']))
         temp_off_campus.append(len(temp_dict['off_campus']))
 
-    temp_on_campus.reverse()
-    temp_off_campus.reverse()
+    # temp_on_campus.reverse()
+    # temp_off_campus.reverse()
 
-    print(temp_on_campus, temp_off_campus)
+    return temp_on_campus, temp_off_campus
 
 def get_metric(data: pd.DataFrame, mode : str = 'on_campus') -> st.metric:
 
@@ -95,6 +95,9 @@ data = get_sheet_data()
 
 attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0), get_all_users_names(data))
 
+on_campus, off_campus = get_last_5_days(data)
+
+st.area_chart(pd.DataFrame({'On Campus': on_campus, "Off Campus": off_campus}))
 
 col1, col2 = st.columns(2)
 
@@ -106,8 +109,6 @@ with col2:
     get_metric(data, 'off_campus')
     st.dataframe(attendance_dict['off_campus'])
 
-if st.button('test'):
-    get_last_5_days(data)
 
 with st.expander("J-Dog and Friends Google Form"):
     st.text("Applogies for the sudden bright mode for the good sheet. Please forgive 🙏")
