@@ -100,11 +100,11 @@ attendance_dict = get_attendance_list(get_data_for_days_ago(data, 0))
 col1, col2 = st.columns(2)
 
 with col1:
-    get_metric('on_campus', data)
+    get_metric(data, 'on_campus',)
     st.dataframe(attendance_dict['on_campus'])
 
 with col2:
-    get_metric('off_campus', data)
+    get_metric(data, 'off_campus')
     st.dataframe(attendance_dict['off_campus'])
 
 if st.button('test'):
