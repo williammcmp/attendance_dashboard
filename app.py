@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 import pytz
 import streamlit as st
+import numpy as np
 import pandas as pd
 from streamlit_gsheets import GSheetsConnection
 
@@ -57,8 +58,11 @@ def get_attendance_list(data : pd.DataFrame | None = None) -> dict:
         if name not in on_campus:
             off_campus.append(name)
 
+    # Sort the names to be alphabetical
+    
+
     # print(on_campus, off_campus)
-    return {'on_campus': on_campus, 'off_campus': off_campus}
+    return {'on_campus': np.sort(on_campus), 'off_campus': np.sort(off_campus)}
 
 def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st.metric:
     if data is None:
@@ -70,13 +74,10 @@ def get_metric(mode : str = 'on_campus', data: pd.DataFrame | None = None) -> st
     if mode == 'on_campus':
         text = "On Campus 🏫"
     else:
-        text = "off Campus 🏝️"
+        text = "Off Campus 🏝️"
 
-    return st.metric(text, len(today_dict[mode]))
-    # return st.metric(text, len(today_dict[mode]), len(yesterday_dict[mode]))
-
-
-
+    # return st.metric(text, len(today_dict[mode]))
+    return st.metric(text, len(today_dict[mode]), len(yesterday_dict[mode])-len(today_dict[mode]))
 
 
 st.set_page_config(page_title="Office Presence Today", layout="wide")
