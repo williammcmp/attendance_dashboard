@@ -67,6 +67,13 @@ def get_last_5_days(data: pd.DataFrame):
 
     return temp_on_campus, temp_off_campus
 
+def is_weekend(tz: str = "Australia/Melbourne") -> bool:
+    au_tz = pytz.timezone(tz)
+    today = datetime.now(au_tz).date()
+    # weekday(): Monday=0 … Sunday=6
+    print(today.weekday())
+    return today.weekday() > 4  # True if Saturday (5) or Sunday (6)
+
 def get_metric(data: pd.DataFrame, mode : str = 'on_campus') -> st.metric:
 
     today_dict = get_attendance_list(get_data_for_days_ago(data, days=0), get_all_users_names(data))
@@ -84,6 +91,15 @@ def get_metric(data: pd.DataFrame, mode : str = 'on_campus') -> st.metric:
 st.set_page_config(page_title="Office Presence Today", layout="wide")
 
 st.title("🏢 Who’s In the Office Today?")
+
+@st.dialog("Bro its the weekend ...", width='large', dismissible=False)
+def weekend_dialog():
+    st.text("Go doing something, go touch grass or anything")
+
+
+# Example usage
+if is_weekend():
+    weekend_dialog()
 
 if st.button("🔄 Refresh data now"):
     st.cache_data.clear()   # clear cached data
